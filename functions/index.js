@@ -31,13 +31,11 @@ const db = admin.firestore();
 // POST or GET and responde accordingly.
 // The first param is name of route and 2nd is the handler
 app.get('/shouts', (req, res) => {
-    // generally you run db.collection('collectionname')
-    // in this case, the db is admin.firestore
     // .get returns a promise which holds a querySnapshot,
     // which contains an array of documents
     db.collection('shouts')
         .orderBy('createdAt', 'desc')
-        .get()
+        .get() // returns all documents as an array
         .then((data) => {
             let posts = [];
             // doc is just a reference. Use .data() returns data inside document
@@ -54,18 +52,16 @@ app.get('/shouts', (req, res) => {
         .catch((err) => console.error(err));
 });
 
-// This funciton also accesses the same endpoint name, but with a POST request.
+// This function also accesses the same endpoint name, but with a POST request.
 app.post('/shout', (req, res) => {
-    if (req.method !== 'POST') {
-        return res.status(400).json({error: 'Method not allowed'});
-    }
+    // Assigns data in request body to newShout
     const newShout = {
         body: req.body.body,
         userHandle: req.body.userHandle,
         createdAt: new Date().toISOString(),
     };
     db.collection('shouts')
-        .add(newShout)
+        .add(newShout) // add newShout as a document to 'shouts' collection
         .then((doc) =>{
             res.json({message: `document ${doc.id} creation all good`});
     }).catch((err) => {
@@ -86,7 +82,7 @@ app.post('/signup', (req, res)=>{
 
     // TODO : validate data
     let token, userId;
-    // Go into users collection and see if there already exists a user with the
+    // Go into users collection and see if there's already a user with the
     // handle just passed in by the request.
     db.doc(`/users/${newUser.handle}`).get()
         .then((doc) =>{
@@ -95,16 +91,17 @@ app.post('/signup', (req, res)=>{
                 return res.status(400)
                 // Err's name is handle
                 .json({handle: 'This handle is already taken.'});
-            } else {
+            } else { // if there's isnt'a  user then create one.
                 return firebase
-        .auth()
-        .createUserWithEmailAndPassword(newUser.email, newUser.password);
+            .auth()
+            .createUserWithEmailAndPassword(newUser.email, newUser.password);
             }
         })
         .then((data) => {
             userId = data.user.uid;
             return data.user.getIdToken();
         })
+        // this .then is for when the getIdToken comes back/returns
         .then((idToken) => {
             token = idToken;
             const userCredentials = {
@@ -116,8 +113,9 @@ app.post('/signup', (req, res)=>{
             // Create new user document in the "users" collection
             // & names it handle it was passed by the req body.
             // Creates collection if it doesn't exist.
-            db.doc(`/users/${newUser.handle}`).set(userCredentials);
-        })
+            // Set creates document
+            return db.doc(`/users/${newUser.handle}`).set(userCredentials);
+        })// this .then is for when the set function returns
         .then(() =>{
             return res.status(201).json({token});
         })
