@@ -16,14 +16,11 @@ firebase.initializeApp(firebaseConfig);
 
 const db = admin.firestore();
 
-// Express allows us to use the same endpoint name ('shouts'),
-// but handle 2 endpoints; GET, POST etc.
-// Without express, you'd have to check whether we're doing
-// POST or GET and respond accordingly.
+// Express allows us to use the same endpoint name,'shouts', but handle 2 endpoints; GET, POST etc.
+// Without express, you'd have to check whether we're doing POST or GET and respond accordingly.
 // The first param is name of route and 2nd is the handler
 app.get('/shouts', (req, res) => {
-    // .get returns a promise which holds a querySnapshot,
-    // which contains an array of documents
+    // .get returns a promise which holds a querySnapshot, which contains an array of documents
     db.collection('shouts')
         .orderBy('createdAt', 'desc')
         .get() // returns all documents as an array
@@ -62,15 +59,16 @@ app.post('/shout', (req, res) => {
 });
 
 const isEmail = (email) =>{
+    // eslint-disable-next-line max-len
     const regEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    if(email.match(regEx)) return true;
+    if (email.match(regEx)) return true;
     else return false;
-}
+};
 
 const isEmpty = (string) => {
-    if(string.trim()==='') return true;
+    if (string.trim()==='') return true;
     else return false;
-}
+};
 
 // Signup route
 app.post('/signup', (req, res)=>{
@@ -104,8 +102,8 @@ app.post('/signup', (req, res)=>{
 
     // TODO : validate data
     let token, userId;
-    // Go into users collection and see if there's already a user with the
-    // handle just passed in by the request.
+    // Go into users collection and see if there's already a user with
+    // the handle just passed in by the request.
     db.doc(`/users/${newUser.handle}`).get()
         .then((doc) =>{
             if (doc.exists) {
@@ -132,10 +130,9 @@ app.post('/signup', (req, res)=>{
                 createdAt: new Date().toISOString(),
                 userId,
             };
-            // Create new user document in the "users" collection
-            // & names it handle it was passed by the req body.
-            // Creates collection if it doesn't exist.
-            // Set creates document
+            // Create new user document in the "users" collection & names it handle that
+            // it was passed by the req body. Creates collection if it doesn't exist.
+            // Set creates document.
             return db.doc(`/users/${newUser.handle}`).set(userCredentials);
         })// this .then is for when the set function returns
         .then(() =>{
@@ -151,5 +148,35 @@ app.post('/signup', (req, res)=>{
             }
         });
 });
-// This automatically turns into multiple routes
+
+app.post('/login', (req, res) => {
+    const user = {
+        email: req.body.email,
+        password: req.body.password,
+    };
+
+    let errors = {};
+
+    if (isEmpty(user.email)) errors.email = 'Must not be empty';
+    if (isEmpty(user.password)) errors.password = 'Must not be empty';
+
+    if (Object.keys(errors).length > 0) {
+        return res.status(400).json(errors);
+    }
+
+    firebase.auth().signInWithEmailAndPassword(user.email, user.password)
+        .then((data) => {
+            return data.user.getIdToken();
+        })
+        .then((token) => {
+            return res.json({token});
+        })
+        .catch((err) => {
+            console.error(err);
+            if (error.code === 'auth/wrong-password') {
+                return res.status(403).json({general: 'Wrong credentials, please try again'});
+            } else return res.status(500).json({error: err.code});
+        });
+});
+
 exports.api = functions.https.onRequest(app);
