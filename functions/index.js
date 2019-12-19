@@ -9,16 +9,7 @@ admin.initializeApp({
   databaseURL: 'https://monkeytime-9a89a.firebaseio.com',
 });
 
-const firebaseConfig = {
-    apiKey: 'AIzaSyB_ntEtX_guRhlbOJJScoY3Vn53pj-9lNA',
-    authDomain: 'monkeytime-9a89a.firebaseapp.com',
-    databaseURL: 'https://monkeytime-9a89a.firebaseio.com',
-    projectId: 'monkeytime-9a89a',
-    storageBucket: 'monkeytime-9a89a.appspot.com',
-    messagingSenderId: '985593063206',
-    appId: '1:985593063206:web:582777eeb77c387ccac3e7',
-    measurementId: 'G-CBNZVHPG7E',
-};
+let firebaseConfig = require('./firebaseConfig.json');
 
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
