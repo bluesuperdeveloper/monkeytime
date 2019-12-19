@@ -19,7 +19,7 @@ const db = admin.firestore();
 // Express allows us to use the same endpoint name ('shouts'),
 // but handle 2 endpoints; GET, POST etc.
 // Without express, you'd have to check whether we're doing
-// POST or GET and responde accordingly.
+// POST or GET and respond accordingly.
 // The first param is name of route and 2nd is the handler
 app.get('/shouts', (req, res) => {
     // .get returns a promise which holds a querySnapshot,
@@ -61,6 +61,17 @@ app.post('/shout', (req, res) => {
     });
 });
 
+const isEmail = (email) =>{
+    const regEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if(email.match(regEx)) return true;
+    else return false;
+}
+
+const isEmpty = (string) => {
+    if(string.trim()==='') return true;
+    else return false;
+}
+
 // Signup route
 app.post('/signup', (req, res)=>{
     // Assign the data sent in request body to newUser
@@ -70,6 +81,26 @@ app.post('/signup', (req, res)=>{
         confirmPassword: req.body.confirmPassword,
         handle: req.body.handle,
     };
+
+    let errors = {};
+
+    if (isEmpty(newUser.email)) {
+        errors.email = 'Must not be empty';
+    } else if (!isEmail(newUser.email)) {
+        errors.email = 'Yo, your email aint valid fam';
+    }
+
+    if (isEmpty(newUser.password)) errors.password = 'You aint got a password?';
+    if (newUser.password!== newUser.confirmPassword) {
+        errors.confirmPassword = 'Passwords gotta match bruh';
+    }
+
+    if (isEmpty(newUser.handle)) errors.handle = 'Bruh you aint got a handle??';
+
+    if (Object.keys(errors).length > 0) {
+        return res.status(400).json(errors);
+    }
+
 
     // TODO : validate data
     let token, userId;
