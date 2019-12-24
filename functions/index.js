@@ -75,7 +75,6 @@ app.post('/shout', FBAuth, (req, res) => {
     if (req.body.body.trim() === '') {
         return res.status(400).json({body: 'Body must not be empty'});
     }
-
     const newShout = {
         body: req.body.body,
         userHandle: req.body.userHandle,
@@ -132,8 +131,6 @@ app.post('/signup', (req, res)=>{
         return res.status(400).json(errors);
     }
 
-
-    // TODO : validate data
     let token, userId;
     // Go into users collection and see if there's already a user with
     // the handle just passed in by the request.
