@@ -69,6 +69,8 @@ const FBAuth = (req, res, next) => {
 };
 
 // This function also accesses the same endpoint name, but with a POST request.
+// In this/any route where we add FBAuth as middleware, before we even enter code block,
+// we've already been authenticated
 // Post 1 shout
 app.post('/shout', FBAuth, (req, res) => {
     // Assigns data in request body to newShout
@@ -77,7 +79,7 @@ app.post('/shout', FBAuth, (req, res) => {
     }
     const newShout = {
         body: req.body.body,
-        userHandle: req.body.userHandle,
+        userHandle: req.user.handle,
         createdAt: new Date().toISOString(),
     };
     db.collection('shouts')
@@ -203,7 +205,7 @@ app.post('/login', (req, res) => {
         })
         .catch((err) => {
             console.error(err);
-            if (error.code === 'auth/wrong-password') {
+            if (err.code === 'auth/wrong-password') {
                 return res.status(403).json({general: 'Wrong credentials, please try again'});
             } else return res.status(500).json({error: err.code});
         });
